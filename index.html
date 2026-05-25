@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏷️ 商品定价表</title>
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Long+Cang&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/x-icon" href="DATA/favicon.ico">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:'ZCOOL KuaiLe','Long Cang','Caveat',cursive;
+  min-height:100vh;color:#2d2d3a;position:relative;
+  height:100vh;display:flex;overflow:hidden;
+}
+#wallpaper-layer{position:fixed;inset:0;z-index:-2;background-size:cover;background-position:center;}
+#wallpaper-overlay{position:fixed;inset:0;z-index:-1;background:rgba(0,0,0,0.10);backdrop-filter:blur(3px);}
+.glass{
+  background:rgba(255,253,249,0.94)!important;
+  backdrop-filter:blur(28px) saturate(1.4);
+  border-color:rgba(45,45,58,0.3)!important;
+}
+.glass-heavy{
+  background:rgba(255,253,249,0.96)!important;
+  backdrop-filter:blur(32px) saturate(1.5);
+}
+.btn{
+  font-family:inherit;font-size:14px;padding:10px 28px;cursor:pointer;
+  background:rgba(255,253,249,0.8);border:2px solid #2d2d3a;
+  border-radius:255px 15px 225px 15px/15px 225px 15px 255px;
+  box-shadow:4px 4px 0 #2d2d3a;transition:all 0.15s;color:#2d2d3a;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.btn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #2d2d3a;}
+.btn-primary{background:#ffd43b!important;font-weight:bold;}
+
+/* ===== Landing Page ===== */
+.landing{
+  width:100%;height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;position:relative;
+}
+.landing-title{
+  font-size:80px;font-weight:bold;margin-bottom:48px;
+  text-shadow:
+    4px 4px 0 #fcc419,
+    -2px -2px 0 rgba(255,253,249,0.9),
+    2px -2px 0 rgba(255,253,249,0.9),
+    -2px 2px 0 rgba(255,253,249,0.9),
+    2px 2px 0 rgba(255,253,249,0.9);
+  letter-spacing:10px;
+}
+.landing-btns{display:flex;gap:28px;justify-content:center;flex-wrap:nowrap;}
+.landing .btn{font-size:20px;padding:18px 40px;}
+
+/* ===== Product View (shown when product selected) ===== */
+.app-view{display:none;width:100%;height:100vh;flex-direction:column;padding:48px 80px;gap:32px;align-items:center;}
+.app-view.show{display:flex;}
+
+/* Minimal top bar */
+.top-bar{
+  display:flex;align-items:center;padding:20px 32px;flex-shrink:0;gap:20px;
+  border:2px solid #2d2d3a;border-radius:255px 15px 225px 15px/15px 225px 15px 255px;
+  box-shadow:4px 4px 0 #2d2d3a;width:100%;max-width:1400px;
+}
+.top-bar .tb-title{
+  font-size:36px;font-weight:bold;cursor:pointer;display:flex;align-items:center;gap:10px;
+  text-shadow:1px 1px 0 rgba(255,253,249,0.8), -1px 0 0 rgba(255,253,249,0.8);
+}
+.top-bar .tb-title:hover{opacity:0.7;}
+.top-bar .tb-actions{display:flex;gap:16px;margin-left:auto;}
+.top-bar .tb-actions .btn{font-size:17px;padding:12px 28px;}
+
+/* Product detail layout */
+.detail-wrap{display:flex;flex:1;overflow:hidden;gap:24px;width:100%;max-width:1400px;}
+
+/* Sidebar */
+.sidebar{
+  width:260px;min-width:260px;display:flex;flex-direction:column;
+  border:2px solid #2d2d3a;border-radius:255px 15px 225px 15px/15px 225px 15px 255px;
+  box-shadow:4px 4px 0 #2d2d3a;padding:20px 0;min-height:0;
+}
+.sidebar-search{padding:10px 16px 16px;}
+.sidebar-search input{
+  width:100%;padding:10px 14px;font-family:inherit;font-size:15px;
+  border:2px solid #2d2d3a;border-radius:255px 15px 225px 15px;outline:none;color:#2d2d3a;
+  background:rgba(255,253,249,0.7);
+}
+.sidebar-search input:focus{background:rgba(255,253,249,0.9);}
+.sidebar-list{flex:1;overflow-y:auto;overflow-x:hidden;padding:4px 12px;min-height:0;}
+.sidebar-list::-webkit-scrollbar{width:6px;}
+.sidebar-list::-webkit-scrollbar-thumb{background:#b0c4d8;border-radius:3px;}
+.sidebar-list::-webkit-scrollbar-track{background:transparent;}
+.pli{padding:14px 16px;cursor:pointer;margin:6px 0;border:2px solid transparent;border-radius:10px;font-size:16px;font-weight:bold;display:flex;align-items:center;justify-content:space-between;}
+.pli:hover{background:rgba(255,253,249,0.4);}
+.pli.active{background:rgba(255,212,59,0.25);border-color:#fcc419;}
+.pli .del{font-size:13px;color:#c92a2a;cursor:pointer;margin-left:auto;padding-left:10px;}
+.sidebar-empty{padding:30px 16px;text-align:center;color:#868e96;font-size:15px;}
+
+/* Content */
+.content{
+  flex:1;display:flex;flex-direction:column;overflow-y:auto;padding:36px 40px 24px;
+  border:2px solid #2d2d3a;border-radius:255px 15px 225px 15px/15px 225px 15px 255px;
+  box-shadow:4px 4px 0 #2d2d3a;
+}
+
+/* Product header */
+.prod-header{display:flex;align-items:center;gap:20px;flex-shrink:0;padding-bottom:20px;border-bottom:2px solid #2d2d3a;margin-bottom:24px;}
+.prod-header .pn{font-size:34px;font-weight:bold;}
+
+/* Colors */
+.color-section{flex-shrink:0;margin-bottom:24px;}
+.color-section .cs-title{font-size:16px;color:#868e96;margin-bottom:10px;}
+.color-tags{display:flex;flex-wrap:wrap;gap:12px;}
+.color-tag{display:inline-flex;align-items:center;gap:5px;padding:8px 18px;font-size:15px;border:2px solid #2d2d3a;border-radius:20px 2px 18px 2px;background:rgba(255,253,249,0.5);cursor:default;}
+.color-tag .ct-del{font-size:11px;color:#c92a2a;cursor:pointer;opacity:0.5;}
+.color-tag .ct-del:hover{opacity:1;}
+.add-color-tag{border-style:dashed;border-color:#adb5bd;color:#868e96;cursor:pointer;}
+.add-color-tag:hover{background:rgba(255,212,59,0.2);color:#2d2d3a;}
+
+/* Sizes */
+.sizes-section{overflow:auto;min-height:80px;margin-bottom:20px;}
+.size-card{
+  display:flex;flex-direction:column;gap:8px;padding:16px 24px;margin-bottom:10px;
+  background:rgba(255,253,249,0.45);border:2px solid #2d2d3a;
+  border-radius:16px 2px 14px 2px/2px 14px 2px 16px;transition:all 0.1s;min-width:700px;
+}
+.size-card:hover{background:rgba(255,253,249,0.65);}
+.size-card .sc-row1{display:flex;align-items:center;gap:10px;overflow-x:auto;}
+.size-card .sc-row2{display:flex;align-items:center;gap:10px;padding-left:30px;flex-wrap:nowrap;}
+.size-card .sc-num{font-size:14px;color:#868e96;min-width:28px;font-weight:bold;flex-shrink:0;}
+.size-card .sc-name{font-size:18px;font-weight:bold;min-width:150px;flex-shrink:0;white-space:nowrap;}
+.size-card .sc-area{font-size:13px;color:#868e96;flex-shrink:0;}
+.size-card .sc-base{font-size:16px;color:#2b8a3e;font-weight:bold;flex-shrink:0;margin-left:auto;}
+.size-card .sc-del{font-size:13px;color:#c92a2a;cursor:pointer;opacity:0.3;padding:4px;flex-shrink:0;}
+.size-card:hover .sc-del{opacity:1;}
+.sc-pp{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:10px;background:rgba(255,253,249,0.6);border:1.5px solid rgba(45,45,58,0.12);font-size:14px;white-space:nowrap;flex-shrink:0;}
+.sc-pp+.sc-pp{margin-left:2px;}
+.sc-pp .ppl{font-size:13px;font-weight:bold;color:#495057;}
+.sc-pp .ppi{font-size:15px;font-weight:bold;color:#2b8a3e;}
+.sc-pp .ppi.pdd-g{color:#e67700;}
+.sc-pp .ppi.pdd-s{color:#c92a2a;}
+.add-size-btn{display:flex;align-items:center;justify-content:center;gap:10px;padding:18px 28px;margin-bottom:12px;cursor:pointer;border:2px dashed #adb5bd;border-radius:14px;color:#868e96;font-size:17px;transition:all 0.1s;}
+.add-size-btn:hover{background:rgba(255,212,59,0.15);border-color:#f59f00;color:#2d2d3a;}
+.sizes-empty{text-align:center;padding:50px;color:#adb5bd;font-size:16px;}
+
+/* Platform Pricing Panel */
+.pp-panel{flex-shrink:0;padding:18px 24px 10px;margin-top:12px;border-top:2px solid #2d2d3a;}
+.pp-panel .pp-title{font-size:17px;font-weight:bold;margin-bottom:12px;}
+.pp-row{display:flex;align-items:center;gap:10px;padding:8px 0;flex-wrap:wrap;border-bottom:1px solid rgba(45,45,58,0.06);}
+.pp-row:last-child{border-bottom:none;}
+.pp-row .pp-name{font-size:16px;font-weight:bold;min-width:50px;}
+.pp-row .pp-desc{font-size:14px;color:#868e96;flex:1;min-width:120px;}
+.pp-row .pp-example{font-size:16px;font-weight:bold;color:#2b8a3e;min-width:80px;text-align:right;}
+.pp-row .pp-toggle{font-size:12px;color:#868e96;cursor:pointer;padding:3px 10px;border:1.5px solid #adb5bd;border-radius:10px;transition:all 0.1s;white-space:nowrap;}
+.pp-row .pp-toggle:hover{background:rgba(255,212,59,0.2);border-color:#f59f00;color:#2d2d3a;}
+.pp-row .pp-toggle.on{background:#ffd43b;border-color:#f59f00;color:#2d2d3a;font-weight:bold;}
+.pp-row .pp-custom-input{width:180px;padding:4px 10px;font-family:inherit;font-size:14px;border:1.5px solid #2d2d3a;border-radius:8px;outline:none;background:rgba(255,253,249,0.7);display:none;}
+.pp-row .pp-custom-input.show{display:inline-block;}
+.pp-row .pp-custom-input:focus{background:rgba(255,253,249,0.9);box-shadow:2px 2px 0 #2d2d3a;}
+.pp-hint{font-size:12px;color:#adb5bd;margin-top:6px;}
+
+/* ===== Search View ===== */
+.search-view{display:none;width:100%;height:100vh;flex-direction:column;padding:48px 80px;gap:32px;align-items:center;}
+.search-view.show{display:flex;}
+.search-content{flex:1;width:100%;max-width:1400px;display:flex;flex-direction:column;overflow:hidden;gap:20px;}
+.search-input-wrap{position:relative;width:100%;max-width:800px;align-self:center;flex-shrink:0;margin-top:40px;}
+.search-input-wrap input{width:100%;padding:18px 24px;font-family:inherit;font-size:24px;border:2px solid #2d2d3a;border-radius:255px 15px 225px 15px;outline:none;background:rgba(255,253,249,0.85);color:#2d2d3a;text-align:center;}
+.search-input-wrap input:focus{background:rgba(255,253,249,0.95);box-shadow:4px 4px 0 #2d2d3a;}
+.search-results{flex:1;overflow-y:auto;width:100%;padding:4px 0;}
+.search-results::-webkit-scrollbar{width:8px;}
+.search-results::-webkit-scrollbar-thumb{background:#b0c4d8;border-radius:4px;}
+.sr-card{
+  display:flex;align-items:center;padding:22px 32px;margin-bottom:12px;cursor:pointer;
+  background:rgba(255,253,249,0.65);border:2px solid #2d2d3a;
+  border-radius:20px 2px 18px 2px;transition:all 0.1s;gap:16px;
+}
+.sr-card:hover{transform:translateY(-2px);box-shadow:6px 6px 0 #2d2d3a;background:rgba(255,253,249,0.85);}
+.sr-card:active{transform:translate(1px,1px);box-shadow:2px 2px 0 #2d2d3a;}
+.sr-card .src-name{font-size:24px;font-weight:bold;flex:1;}
+.sr-card .src-detail{font-size:15px;color:#868e96;}
+.sr-card .src-badge{font-size:14px;padding:6px 16px;border-radius:10px;background:#ffd43b;font-weight:bold;}
+.sr-empty{text-align:center;padding:60px;color:#adb5bd;font-size:18px;}
+
+/* ===== [MODULE] Calculator View ===== */
+.calc-view{display:none;width:100%;height:100vh;flex-direction:column;padding:48px 80px;gap:32px;align-items:center;}
+.calc-view.show{display:flex;}
+.calc-content{flex:0 1 auto;width:100%;max-width:1400px;display:flex;flex-direction:column;overflow:visible;}
+.calc-input-panel{flex-shrink:0;padding:24px 32px;margin-bottom:24px;
+  border:2px solid #2d2d3a;border-radius:255px 15px 225px 15px/15px 225px 15px 255px;box-shadow:4px 4px 0 #2d2d3a;
+}
+.calc-input-panel textarea{
+  width:100%;padding:18px 22px;font-family:inherit;font-size:18px;min-height:120px;max-height:200px;
+  border:2px solid #2d2d3a;border-radius:16px 2px 14px 2px;outline:none;background:rgba(255,253,249,0.85);color:#2d2d3a;resize:vertical;
+  box-shadow:4px 4px 0 #2d2d3a;
+}
+.calc-input-panel textarea:focus{background:rgba(255,253,249,0.95);}
+.calc-results-wrap{overflow-x:auto;padding:20px 28px;width:100%;
+  border:2px solid #2d2d3a;border-radius:255px 15px 225px 15px/15px 225px 15px 255px;box-shadow:4px 4px 0 #2d2d3a;
+}
+.calc-results-wrap::-webkit-scrollbar{width:8px;height:8px;}
+.calc-results-wrap::-webkit-scrollbar-thumb{background:#b0c4d8;border-radius:4px;}
+.calc-table{width:100%;border-collapse:separate;border-spacing:0;min-width:900px;}
+.calc-table th{
+  position:sticky;top:0;z-index:2;padding:14px 16px;font-size:17px;font-weight:bold;text-align:center;font-family:inherit;
+  background:rgba(255,253,249,0.94);backdrop-filter:blur(28px);border-bottom:3px solid #2d2d3a;
+}
+.calc-table th:first-child{text-align:left;}
+.calc-table td{
+  padding:12px 16px;font-size:16px;text-align:center;font-family:inherit;
+  border-bottom:1.5px solid rgba(45,45,58,0.08);
+}
+.calc-table td:first-child{text-align:left;font-weight:bold;font-size:17px;font-family:inherit;}
+.calc-table tr:hover td{background:rgba(255,212,59,0.08);}
+.calc-table .price{color:#2b8a3e;font-weight:bold;font-size:18px;font-family:inherit;}
+.calc-table .disc{color:#c92a2a;font-weight:bold;font-family:inherit;}
+.calc-table .hd{color:#e67700;font-weight:bold;font-family:inherit;}
+.calc-table td.dim-td{font-size:15px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:inherit;}
+.calc-empty{text-align:center;padding:40px;color:#adb5bd;font-size:18px;font-family:inherit;}
+/* ===== END [MODULE] Calculator View ===== */
+
+/* ===== Modal ===== */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.3);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.active{display:flex;}
+.modal-box{
+  width:100%;max-width:720px;padding:32px 36px;
+  animation:slide 0.25s;box-shadow:6px 6px 0 #2d2d3a;
+  max-height:92vh;overflow-y:auto;pointer-events:auto;position:relative;
+  border:2px solid #2d2d3a;border-radius:255px 15px 225px 15px/15px 225px 15px 255px;
+}
+@keyframes slide{from{opacity:0;transform:translateY(15px);}to{opacity:1;transform:translateY(0);}}
+.modal-esc{position:absolute;top:8px;right:12px;font-size:10px;color:#adb5bd;}
+.modal-title{font-size:22px;margin-bottom:16px;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:15px;margin-bottom:5px;color:#495057;}
+.form-group input,.form-group textarea{width:100%;padding:14px 18px;font-family:inherit;font-size:18px;border:2px solid #2d2d3a;border-radius:12px 2px 10px 2px;outline:none;background:rgba(255,253,249,0.7);color:#2d2d3a;}
+.form-group input:focus,.form-group textarea:focus{background:rgba(255,253,249,0.9);box-shadow:3px 3px 0 #2d2d3a;}
+.form-group textarea{resize:vertical;min-height:90px;font-size:16px;}
+.color-grid{display:flex;flex-wrap:nowrap;gap:6px;margin:8px 0;overflow-x:auto;}
+.color-card{width:80px;padding:3px;cursor:pointer;border:2px solid #2d2d3a;border-radius:8px 1px 6px 1px;background:rgba(255,253,249,0.5);transition:all 0.1s;text-align:center;flex-shrink:0;}
+.color-card:hover{transform:translateY(-2px);box-shadow:3px 3px 0 #2d2d3a;}
+.color-card.active{border-color:#f59f00;background:rgba(255,212,59,0.2);box-shadow:3px 3px 0 #f59f00;}
+.color-card .cc-img{width:100%;height:28px;object-fit:cover;border-radius:3px;margin-bottom:2px;}
+.color-card .cc-name{font-size:10px;display:block;line-height:1.2;}
+.color-card .cc-check{font-size:10px;color:#2b8a3e;display:none;}
+.color-card.active .cc-check{display:block;}
+/* Add Size Modal preview */
+.sz-preview{margin:8px 0;padding:12px 14px;background:rgba(255,253,249,0.4);border-radius:8px;border:1px dashed rgba(45,45,58,0.2);max-height:180px;overflow:auto;}
+.sz-preview .sp-title{font-size:12px;color:#868e96;margin-bottom:6px;}
+.sp-item{display:flex;align-items:center;gap:10px;padding:5px 0;font-size:14px;border-bottom:1px dashed rgba(45,45,58,0.06);}
+.sp-item:last-child{border-bottom:none;}
+.sp-item .spi-name{font-weight:bold;min-width:200px;}
+.sp-item .spi-area{color:#868e96;}
+.sp-item .spi-price{color:#2b8a3e;font-weight:bold;font-size:15px;}
+.sp-empty{color:#adb5bd;font-size:13px;text-align:center;padding:8px;}
+.modal-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:18px;}
+.modal-actions button{font-family:inherit;font-size:16px;padding:12px 28px;cursor:pointer;border:2px solid #2d2d3a;border-radius:255px 15px 225px 15px;box-shadow:3px 3px 0 #2d2d3a;transition:all 0.1s;color:#2d2d3a;}
+.modal-actions button:active{transform:translate(1px,1px);box-shadow:1px 1px 0 #2d2d3a;}
+.modal-actions .btn-cancel{background:rgba(255,253,249,0.7);}
+.modal-actions .btn-confirm{background:#ffd43b;font-weight:bold;}
+
+/* Wallpaper Picker Modal */
+.wp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;margin:10px 0;max-height:300px;overflow-y:auto;}
+.wp-grid::-webkit-scrollbar{width:5px;}
+.wp-grid::-webkit-scrollbar-thumb{background:#b0c4d8;border-radius:3px;}
+.wp-thumb{aspect-ratio:1;border-radius:6px 1px 4px 1px;border:2px solid #2d2d3a;cursor:pointer;background-size:cover;background-position:center;transition:all 0.1s;position:relative;}
+.wp-thumb:hover{transform:scale(1.05);box-shadow:3px 3px 0 #2d2d3a;}
+.wp-thumb.active{border-color:#f59f00;box-shadow:3px 3px 0 #f59f00;}
+.wp-thumb .wp-name{position:absolute;bottom:0;left:0;right:0;font-size:9px;background:rgba(255,253,249,0.8);padding:2px 4px;text-align:center;border-radius:0 0 4px 4px;}
+.wp-empty{text-align:center;padding:20px;color:#adb5bd;font-size:13px;}
+.wp-upload{display:flex;align-items:center;gap:8px;padding:8px 0;}
+.wp-upload label{font-size:12px;color:#868e96;cursor:pointer;}
+
+/* Toast */
+.toast{position:fixed;top:24px;left:50%;transform:translateX(-50%);z-index:9999;pointer-events:none;padding:8px 18px;background:rgba(255,253,249,0.9);backdrop-filter:blur(16px);border:2px solid #2b8a3e;border-radius:20px 4px 18px 4px;box-shadow:3px 3px 0 #2b8a3e;font-family:inherit;font-size:13px;color:#2d2d3a;animation:tin 0.25s;}
+.toast.err{border-color:#dc2626;box-shadow:3px 3px 0 #dc2626;}
+.toast.warn{border-color:#e67700;box-shadow:3px 3px 0 #e67700;}
+@keyframes tin{from{opacity:0;transform:translateX(-50%) translateY(-10px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+
+/* Storage modal */
+.storage-overlay{display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.3);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;}
+.storage-overlay.active{display:flex;}
+.storage-box{max-width:480px;width:100%;padding:28px 32px;animation:slide 0.2s;pointer-events:auto;position:relative;
+  border:2px solid #2d2d3a;border-radius:255px 15px 225px 15px/15px 225px 15px 255px;box-shadow:6px 6px 0 #2d2d3a;
+}
+.storage-box .st-title{font-size:22px;font-weight:bold;margin-bottom:16px;}
+.st-status{display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:10px;font-size:15px;margin-bottom:14px;}
+.st-status.on{background:rgba(47,133,90,0.1);border:1.5px solid #2b8a3e;color:#2b8a3e;}
+.st-status.off{background:rgba(201,42,42,0.08);border:1.5px solid #c92a2a;color:#c92a2a;}
+.st-status .st-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.st-status.on .st-dot{background:#2b8a3e;}
+.st-status.off .st-dot{background:#c92a2a;}
+.st-row{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.st-row button{font-family:inherit;font-size:15px;padding:10px 22px;cursor:pointer;border:2px solid #2d2d3a;border-radius:255px 15px 225px 15px;box-shadow:3px 3px 0 #2d2d3a;transition:all 0.1s;color:#2d2d3a;background:rgba(255,253,249,0.7);flex:1;}
+.st-row button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #2d2d3a;}
+.st-row button.st-primary{background:#ffd43b;font-weight:bold;}
+.st-path{font-size:13px;color:#868e96;word-break:break-all;padding:6px 0;}
+.st-hint{font-size:12px;color:#adb5bd;margin-top:8px;line-height:1.5;}
+.st-hint code{background:rgba(45,45,58,0.06);padding:1px 5px;border-radius:3px;font-family:inherit;}
+
+/* Confirm */
+.confirm-overlay{display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.3);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;}
+.confirm-overlay.active{display:flex;}
+.confirm-box{max-width:420px;width:100%;padding:32px 36px;text-align:center;animation:slide 0.2s;pointer-events:auto;position:relative;
+  border:2px solid #2d2d3a;border-radius:255px 15px 225px 15px/15px 225px 15px 255px;box-shadow:6px 6px 0 #2d2d3a;
+}
+.confirm-box .icon{font-size:36px;display:block;margin-bottom:10px;}
+.confirm-box .msg{font-size:20px;margin-bottom:22px;line-height:1.5;}
+.confirm-actions{display:flex;gap:14px;justify-content:center;}
+.confirm-actions button{
+  font-family:inherit;font-size:18px;padding:14px 38px;cursor:pointer;
+  border:2px solid #2d2d3a;border-radius:255px 15px 225px 15px;
+  box-shadow:3px 3px 0 #2d2d3a;transition:all 0.15s;color:#2d2d3a;position:relative;
+}
+.confirm-actions button:active{transform:translate(2px,2px)!important;box-shadow:1px 1px 0 #2d2d3a!important;}
+.confirm-actions .btn-yes{background:#ffd43b;font-weight:bold;}
+.confirm-actions .btn-yes:hover{background:#f59f00;transform:translateY(-3px);box-shadow:5px 7px 0 #2d2d3a;}
+.confirm-actions .btn-yes:active{transform:translate(2px,2px)!important;box-shadow:1px 1px 0 #2d2d3a!important;}
+.confirm-actions .btn-no{background:rgba(255,253,249,0.8);}
+.confirm-actions .btn-no:hover{background:rgba(255,253,249,0.95);transform:translateY(-3px);box-shadow:5px 7px 0 #2d2d3a;}
+.confirm-actions .btn-no:active{transform:translate(2px,2px)!important;box-shadow:1px 1px 0 #2d2d3a!important;}
+</style>
+</head>
+<body>
+<div id="wallpaper-layer"></div>
+<div id="wallpaper-overlay"></div>
+
+<!-- ===== Landing Page ===== -->
+<div class="landing" id="landing">
+  <div class="landing-title">🏷️ 商品定价表</div>
+  <div class="landing-btns">
+    <button class="btn btn-primary" onclick="openAM()">➕ 添加商品</button>
+    <button class="btn" onclick="openWP()">🖼️ 壁纸选择</button>
+    <button class="btn" onclick="goSearch()">🔍 查找商品</button>
+    <button class="btn btn-primary" onclick="goCalc()">📐 尺寸价格计算</button>
+  </div>
+  <div style="display:flex;gap:16px;margin-top:20px;">
+    <button class="btn" style="font-size:14px;padding:10px 24px;" onclick="openST()">💾 存储</button>
+  </div>
+</div>
+
+<!-- ===== Search View ===== -->
+<div class="search-view" id="searchView">
+  <div class="top-bar glass">
+    <span class="tb-title" onclick="closeSearch()">🔍 查找商品</span>
+    <div class="tb-actions">
+      <button class="btn" onclick="closeSearch()">← 返回</button>
+    </div>
+  </div>
+  <div class="search-content glass" style="padding:40px;border-radius:255px 15px 225px 15px/15px 225px 15px 255px;box-shadow:4px 4px 0 #2d2d3a;">
+    <div class="search-input-wrap">
+      <input id="sI" placeholder="输入商品名称搜索…" oninput="onSearchView()" autofocus>
+    </div>
+    <div class="search-results" id="sR"></div>
+  </div>
+</div>
+
+<!-- ===== [MODULE] Calculator View ===== -->
+<div class="calc-view" id="calcView">
+  <div class="top-bar glass">
+    <span class="tb-title" onclick="closeCalc()">📐 尺寸价格计算</span>
+    <div class="tb-actions">
+      <button class="btn" onclick="clearCalc()">🗑️ 清空</button>
+      <button class="btn btn-primary" onclick="copyCalc()">📋 复制结果</button>
+      <button class="btn" onclick="closeCalc()">← 返回</button>
+    </div>
+  </div>
+  <div class="calc-content">
+    <div class="calc-input-panel glass">
+      <textarea id="calcInput" placeholder="请输入尺寸" oninput="onCalcInput()" spellcheck="false"></textarea>
+    </div>
+    <div class="calc-results-wrap glass">
+      <div id="calcResults"><div class="calc-empty">📝 在上方输入尺寸，自动生成价格表</div></div>
+    </div>
+  </div>
+</div>
+<!-- ===== END [MODULE] Calculator View ===== -->
+
+<!-- ===== App View ===== -->
+<div class="app-view" id="appView">
+  <div class="top-bar glass">
+    <span class="tb-title" onclick="goLanding()">🏷️ 商品定价表</span>
+    <div class="tb-actions">
+      <button class="btn btn-primary" onclick="openAM()">➕ 添加商品</button>
+      <button class="btn" onclick="openWP()">🖼️ 壁纸</button>
+    </div>
+  </div>
+  <div class="detail-wrap">
+    <div class="sidebar glass" id="sidebar">
+      <div class="sidebar-search"><input id="sS" placeholder="🔍 搜索" oninput="onSearch()"></div>
+      <div class="sidebar-list" id="sL"></div>
+    </div>
+    <div class="content glass" id="cA">
+      <div id="detail"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Product Modal -->
+<div class="modal-overlay" id="amM">
+  <div class="modal-box glass-heavy">
+    <span class="modal-esc">ESC关闭</span>
+    <div class="modal-title">➕ 添加商品</div>
+    <div class="form-group"><label>📦 商品名</label><input id="amN" placeholder="" maxlength="30"></div>
+    <div class="form-group">
+      <label>🎨 可选颜色</label>
+      <div class="color-grid" id="amCG"></div>
+    </div>
+    <div class="form-group">
+      <label>📏 尺寸</label>
+      <textarea id="amSZ" placeholder="" spellcheck="false"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeAM()">取消</button>
+      <button class="btn-confirm" onclick="confirmAM()">✓ 添加</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Size Modal -->
+<div class="modal-overlay" id="avM">
+  <div class="modal-box glass-heavy" style="max-width:400px;">
+    <span class="modal-esc">ESC关闭</span>
+    <div class="modal-title">➕ 添加尺寸</div>
+    <div class="form-group">
+      <label>📏 尺寸参数</label>
+      <textarea id="avSZ" placeholder="20*17&#10;25*21.5" oninput="previewAV()" spellcheck="false" style="min-height:70px;"></textarea>
+    </div>
+    <div class="sz-preview">
+      <div class="sp-title">📐 解析：</div>
+      <div class="sp-empty" id="avPE">输入尺寸后自动解析~</div>
+      <div id="avPL"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeAV()">取消</button>
+      <button class="btn-confirm" onclick="confirmAV()">✓ 添加</button>
+    </div>
+  </div>
+</div>
+
+<!-- Wallpaper Modal -->
+<div class="modal-overlay" id="wpM">
+  <div class="modal-box glass-heavy" style="max-width:480px;">
+    <span class="modal-esc">ESC关闭</span>
+    <div class="modal-title">🖼️ 壁纸选择</div>
+    <div class="wp-grid" id="wpGrid"></div>
+    <div class="wp-upload">
+      <label>📤 上传壁纸：<input type="file" accept="image/*" onchange="uploadWP(event)" style="display:inline;font-size:12px;"></label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeWP()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- Storage Modal -->
+<div class="storage-overlay" id="stM">
+  <div class="storage-box glass-heavy">
+    <div class="st-title">💾 数据存储</div>
+    <div class="st-status off" id="stStatus"><span class="st-dot"></span><span id="stMsg">未绑定数据文件</span></div>
+    <div class="st-path" id="stPath"></div>
+    <div class="st-row">
+      <button class="st-primary" onclick="bindStorage()">📁 绑定DATA目录</button>
+      <button onclick="saveToFile()">💾 手动保存</button>
+    </div>
+    <div class="st-row">
+      <button onclick="loadFromFile()">📂 从文件加载</button>
+      <button onclick="expJSON()">📥 导出JSON</button>
+    </div>
+    <div class="st-hint">
+      💡 先点「绑定DATA目录」选择项目的 <code>DATA</code> 文件夹，之后每次修改自动同步 <code>data.json</code>。<br>
+      想移动到别的电脑点「导出JSON」下载文件即可。
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeST()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm -->
+<div class="confirm-overlay" id="cfO">
+  <div class="confirm-box glass-heavy"><span class="icon">⚠️</span>
+    <div class="msg" id="cfM"></div>
+    <div class="confirm-actions">
+      <button class="btn-no" onclick="closeCF()">取消</button>
+      <button class="btn-yes" id="cfY">确定</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== Price Calc =====
+const DUP=0.0126,DBF=4,DS=800,DF=0.15,DSC=1000;
+function calcP(a,u,b){u=u||DUP;b=b||DBF;return a<=DS?a*u+b:a*u*(1-DF*Math.log1p((a-DS)/DSC))+b;}
+function parseDim(d){
+  if(!d||!d.trim())return null;const s=d.trim();
+  const m=s.match(/(?:长(?:度)?)?(\d+(?:\.\d+)?)\s*(?:cm)?\s*(?:\*|×|x|X)\s*(?:宽(?:度)?)?(\d+(?:\.\d+)?)\s*(?:cm)?/i);
+  if(m){const w=parseFloat(m[1]),h=parseFloat(m[2]);if(w>0&&h>0)return w*h;}
+  const sm=s.match(/^(\d+(?:\.\d+)?)\s*(?:\*|×|x|X)\s*(\d+(?:\.\d+)?)$/);if(sm){const w=parseFloat(sm[1]),h=parseFloat(sm[2]);if(w>0&&h>0)return w*h;}
+  const n=s.match(/^(\d+(?:\.\d+)?)$/);if(n){const v=parseFloat(n[1]);if(v>0)return v;}return null;
+}
+function fmtDim(d){
+  if(!d||!d.trim())return'';
+  const s=d.trim();
+  const m=s.match(/(?:长(?:度)?)?(\d+(?:\.\d+)?)\s*(?:cm)?\s*(?:\*|×|x|X)\s*(?:宽(?:度)?)?(\d+(?:\.\d+)?)\s*(?:cm)?/i)||s.match(/^(\d+(?:\.\d+)?)\s*(?:\*|×|x|X)\s*(\d+(?:\.\d+)?)$/);
+  if(m)return`长度${parseFloat(m[1])}cm×宽度${parseFloat(m[2])}cm`;
+  const n=s.match(/^(\d+(?:\.\d+)?)$/);if(n)return`${n[1]}cm²`;return s;
+}
+function parseSize(s){
+  if(!s||!s.trim())return null;
+  const m=s.match(/(?:长(?:度)?)?(\d+(?:\.\d+)?)\s*(?:cm)?\s*(?:\*|×|x|X)\s*(?:宽(?:度)?)?(\d+(?:\.\d+)?)\s*(?:cm)?/i);
+  if(m){const w=parseFloat(m[1]),h=parseFloat(m[2]);if(w>0&&h>0)return{w,h,area:w*h};}
+  const sm=s.match(/^(\d+(?:\.\d+)?)\s*(?:\*|×|x|X)\s*(\d+(?:\.\d+)?)$/);if(sm){const w=parseFloat(sm[1]),h=parseFloat(sm[2]);if(w>0&&h>0)return{w,h,area:w*h};}
+  const n=s.match(/^(\d+(?:\.\d+)?)$/);if(n){const v=parseFloat(n[1]);if(v>0)return{w:v,h:1,area:v};}return null;
+}
+function parseSizes(t){const r=[];t.split(/[\s,，;\n]+/).filter(x=>x.trim()).forEach(x=>{const s=x.trim(),p=parseSize(s);if(p)r.push({raw:s,w:p.w,h:p.h,area:p.area});});return r;}
+
+// ===== Data =====
+const PF=['taobao','douyin','pdd','jd'];
+const PL_DESC={
+  taobao:{name:'淘宝',desc:'10-2 / 20-4 / 40-8 / 60-15'},
+  douyin:{name:'抖音',desc:'10+溢价2'},
+  pdd:{name:'拼多多',desc:'10-1 → 拼团/0.8 → 单买+8'},
+  jd:{name:'京东',desc:'10+溢价2'}
+};
+const DC=[{n:'炫彩金色',img:'textures/炫彩金色.jpg'},{n:'炫彩银色',img:'textures/炫彩银色.png'},{n:'反光银白色',img:'textures/反光银白色.jpg'},{n:'黑色',img:'textures/黑色.jpg'},{n:'反光红色',img:'textures/反光红色.jpg'},{n:'反光黄色',img:'textures/反光黄色.jpg'},{n:'反光蓝色',img:'textures/反光蓝色.jpg'}];
+
+class Sz{constructor(d={}){this.dim=d.dim||'';this.area=d.area||null;}getArea(){if(this.area!==null)return this.area;return parseDim(this.dim);}}
+class Prod{
+  constructor(d={}){
+    this.id=d.id||Date.now()+(Math.random()*1e6|0);
+    this.n=(d.n||'').trim();this.up=parseFloat(d.up)||DUP;this.bf=parseFloat(d.bf)||DBF;
+    this.cs=Array.isArray(d.cs)?d.cs.filter(x=>x.trim()):[];
+    this.szs=Array.isArray(d.szs)?d.szs.map(s=>new Sz(s)):[];
+    this.ps={};PF.forEach(p=>{this.ps[p]=parseFloat(d.ps?.[p])||0;});
+    // Platform pricing rules: {taobao:{mode:'preset'|'custom',custom:''}, ...}
+    this.pr=d.pr||{};
+    PF.forEach(p=>{if(!this.pr[p])this.pr[p]={mode:'preset',custom:''};});
+  }
+  bp(i){const s=this.szs[i];if(!s)return 0;const a=s.getArea();return a===null?0:calcP(a,this.up,this.bf);}
+  pp(area,pl){
+    const bp=calcP(area,this.up,this.bf);
+    const r=this.pr[pl]||{mode:'preset',custom:''};
+    if(r.mode==='custom'&&r.custom){
+      try{const fn=new Function('bp','return '+r.custom);const v=fn(bp);return isFinite(v)?Math.max(bp,v):bp;}catch(e){return bp;}
+    }
+    // Preset rules - these are PREMIUMS (added to base price)
+    if(pl==='taobao'){
+      let prem=0;
+      if(bp>=60)prem=15;
+      else if(bp>=40)prem=8;
+      else if(bp>=20)prem=4;
+      else if(bp>=10)prem=2;
+      return bp+prem;
+    }
+    if(pl==='douyin')return bp+2;
+    if(pl==='jd')return bp+2;
+    if(pl==='pdd'){
+      const prem=bp>=10?1:0;
+      const group=(bp+prem)/0.8;
+      const single=group+8;
+      return {group:Math.max(bp,group),single:Math.max(bp,single)};
+    }
+    return bp;
+  }
+  ppStr(area,pl){
+    const v=this.pp(area,pl);
+    if(pl==='pdd'&&typeof v==='object')return `团${v.group.toFixed(1)}/单${v.single.toFixed(1)}`;
+    return `¥${v.toFixed(1)}`;
+  }
+  addC(c){if(c&&!this.cs.includes(c))this.cs.push(c);}
+  remC(c){this.cs=this.cs.filter(x=>x!==c);}
+  addSz(dim){const a=parseDim(dim);this.szs.push(new Sz({dim,area:a}));}
+  remSz(i){this.szs.splice(i,1);}
+}
+
+// ===== Board =====
+const SK='pt7_d',SV='v1';
+class Board{
+  constructor(){this.ps=[];this.sel=null;this.load();}
+  load(){try{const r=localStorage.getItem(SK);if(r){const d=JSON.parse(r);this.ps=(d.ver===SV&&Array.isArray(d.ps)?d.ps:Array.isArray(d)?d:[]).map(p=>new Prod(p));}}catch(e){}}
+  save(){try{localStorage.setItem(SK,JSON.stringify({ver:SV,ps:this.ps}));}catch(e){}if(dirHandle)saveToFile();}
+  add(d){const p=new Prod(d);this.ps.push(p);this.save();return p;}
+  get(id){return this.ps.find(p=>p.id===id);}
+  upd(id,d){const p=this.get(id);if(!p)return false;if(d.n!==undefined)p.n=d.n.trim();if(d.up!==undefined)p.up=d.up;if(d.bf!==undefined)p.bf=d.bf;if(d.ps)PF.forEach(pl=>{if(d.ps[pl]!==undefined)p.ps[pl]=d.ps[pl];});this.save();return true;}
+  rem(id){this.ps=this.ps.filter(p=>p.id!==id);if(this.sel===id)this.sel=null;this.save();}
+  search(q){if(!q.trim())return this.ps;const lq=q.trim().toLowerCase();return this.ps.filter(p=>p.n.toLowerCase().includes(lq));}
+  expJSON(){return JSON.stringify({ver:SV,ps:this.ps},null,2);}
+  impJSON(str){try{const d=JSON.parse(str);const its=d.ps||(Array.isArray(d)?d:[d]);if(!Array.isArray(its))throw Error();const r=this._imp(its);return{ok:true,msg:`导入：新增${r.a} 更新${r.u} 跳过${r.s}`};}catch(e){return{ok:false,msg:'导入失败'}}}
+  _imp(items){let a=0,s=0,u=0;items.forEach(it=>{if(!it.n){s++;return;}const ex=this.ps.find(p=>p.n===it.n);if(ex){if(it.cs)it.cs.forEach(c=>{if(c&&!ex.cs.includes(c))ex.cs.push(c);});if(it.szs){const sn=new Set(ex.szs.map(sz=>sz.dim));it.szs.forEach(sz=>{if(sz.dim&&!sn.has(sz.dim)){ex.szs.push(new Sz(sz));sn.add(sz.dim);}});}if(it.ps)PF.forEach(pl=>{if(it.ps[pl]!==undefined)ex.ps[pl]=it.ps[pl];});u++;}else{this.add(it);a++;}});this.save();return{a,u,s};}
+}
+
+// ===== State =====
+let bd=new Board(),sp=null,cfCb=null;
+let amSel=new Set(DC.map(c=>c.n));
+
+// ===== Navigation =====
+function saveView(name,extra){
+  try{localStorage.setItem('pt7_view',name);if(extra)localStorage.setItem('pt7_vextra',JSON.stringify(extra));}catch(e){}
+}
+function goLanding(){
+  hideAllViews();
+  document.getElementById('landing').style.display='flex';
+  saveView('landing');
+}
+function hideAllViews(){
+  document.getElementById('landing').style.display='none';
+  document.getElementById('appView').classList.remove('show');
+  document.getElementById('searchView').classList.remove('show');
+  document.getElementById('calcView').classList.remove('show');
+}
+function goApp(){
+  hideAllViews();
+  document.getElementById('landing').style.display='none';
+  document.getElementById('appView').classList.add('show');
+  saveView('app',{sel:bd.sel});
+}
+function restoreView(){
+  try{
+    const v=localStorage.getItem('pt7_view');
+    if(!v||v==='landing')return;
+    if(v==='app'){
+      const extra=JSON.parse(localStorage.getItem('pt7_vextra')||'{}');
+      if(extra.sel&&bd.get(extra.sel)){bd.sel=extra.sel;renderSidebar();renderDetail();goApp();}
+      else if(bd.ps.length){bd.sel=bd.ps[0].id;renderSidebar();renderDetail();goApp();}
+    }else if(v==='search')goSearch();
+    else if(v==='calc'){
+      const extra=JSON.parse(localStorage.getItem('pt7_vextra')||'{}');
+      goCalc();
+      if(extra.input){document.getElementById('calcInput').value=extra.input;onCalcInput();}
+    }
+  }catch(e){}
+}
+
+// ===== Search View =====
+function goSearch(){
+  hideAllViews();
+  document.getElementById('searchView').classList.add('show');
+  setTimeout(()=>{const i=document.getElementById('sI');i.value='';i.focus();onSearchView();},50);
+  saveView('search');
+}
+function closeSearch(){goLanding();}
+function onSearchView(){
+  const q=document.getElementById('sI').value.trim(),list=document.getElementById('sR');
+  if(!q){list.innerHTML='';return;}
+  const ps=bd.search(q);
+  list.innerHTML=ps.length
+    ? ps.map(p=>{
+        const szc=p.szs.length;
+        const cc=p.cs.length;
+        return `<div class="sr-card" onclick="goToFromSearch('${p.id}')">
+          <span class="src-name">${esc(p.n)}</span>
+          <span class="src-detail">${szc}个尺寸 · ${cc}种颜色</span>
+          <span class="src-badge">¥${p.szs.length?Math.min(...p.szs.map((_,i)=>p.bp(i))).toFixed(1):'—'}~</span>
+        </div>`;
+      }).join('')
+    : '<div class="sr-empty">没有找到匹配的商品</div>';
+}
+function goToFromSearch(id){
+  const p=bd.get(Number(id));
+  if(!p){toast('商品不存在','err');return;}
+  bd.sel=p.id;
+  closeSearch();
+  renderSidebar();
+  renderDetail();
+  goApp();
+}
+
+// ===== [MODULE] Calculator View =====
+function goCalc(){
+  hideAllViews();
+  document.getElementById('calcView').classList.add('show');
+  onCalcInput();
+  saveView('calc');
+}
+function closeCalc(){goLanding();}
+const DISCOUNT_LEVELS=[0.05,0.10,0.15,0.20,0.25,0.30,0.35,0.40];
+function calcPriceCap(area,cap){
+  const base=area*DUP+DBF;
+  if(area<=DS||cap<=0)return base;
+  const t=(area-DS)/DSC;
+  const nd=DF*Math.log1p(t);
+  const ed=Math.min(nd,cap);
+  return area*DUP*(1-ed)+DBF;
+}
+function onCalcInput(){
+  const raw=document.getElementById('calcInput').value;
+  saveView('calc',{input:raw});
+  const items=parseSizes(raw);
+  const el=document.getElementById('calcResults');
+  if(!items.length){
+    el.innerHTML='<div class="calc-empty">📝 在上方输入尺寸，自动生成价格表</div>';
+    return;
+  }
+  let html=`<table class="calc-table">
+    <thead><tr>
+      <th>📏 尺寸</th>
+      <th>📐 面积</th>
+      <th>💰 基础售价</th>
+      <th>🎁 5%优惠</th>
+      <th>🎁 10%优惠</th>
+      <th>🎁 15%优惠</th>
+      <th>💚 20%优惠</th>
+      <th>💚 25%优惠</th>
+      <th>💙 30%</th>
+      <th>💜 40%</th>
+    </tr></thead><tbody>`;
+  items.forEach(it=>{
+    const bp=calcP(it.area,DUP,DBF);
+    const prices=DISCOUNT_LEVELS.map(d=>calcPriceCap(it.area,d));
+    const display=it.raw.includes('长度')||it.raw.includes('×')||it.raw.includes('*')
+      ? fmtDim(it.raw) : it.raw;
+    html+=`<tr>
+      <td class="dim-td">${esc(display)}</td>
+      <td>${it.area.toFixed(0)} cm²</td>
+      <td><span class="price">¥${bp.toFixed(1)}</span></td>
+      <td><span class="disc">¥${prices[0].toFixed(1)}</span></td>
+      <td><span class="disc">¥${prices[1].toFixed(1)}</span></td>
+      <td><span class="disc">¥${prices[2].toFixed(1)}</span></td>
+      <td>¥${prices[3].toFixed(1)}</td>
+      <td>¥${prices[4].toFixed(1)}</td>
+      <td><span class="hd">¥${prices[5].toFixed(1)}</span></td>
+      <td><span class="hd">¥${prices[7].toFixed(1)}</span></td>
+    </tr>`;
+  });
+  html+=`</tbody></table>`;
+  el.innerHTML=html;
+}
+function copyCalc(){
+  const raw=document.getElementById('calcInput').value;
+  const items=parseSizes(raw);
+  if(!items.length){toast('没有数据可复制','warn');return;}
+  const linesOut=[];
+  const hd='尺寸\t面积\t基础售价\t5%优惠\t10%优惠\t15%优惠\t20%优惠\t25%优惠\t30%优惠\t40%优惠';
+  linesOut.push(hd);
+  items.forEach(it=>{
+    const bp=calcP(it.area,DUP,DBF);
+    const prices=DISCOUNT_LEVELS.map(d=>calcPriceCap(it.area,d));
+    linesOut.push(`${it.raw}\t${it.area.toFixed(0)}\t${bp.toFixed(1)}\t${prices[0].toFixed(1)}\t${prices[1].toFixed(1)}\t${prices[2].toFixed(1)}\t${prices[3].toFixed(1)}\t${prices[4].toFixed(1)}\t${prices[5].toFixed(1)}\t${prices[7].toFixed(1)}`);
+  });
+  navigator.clipboard.writeText(linesOut.join('\n')).then(()=>toast('📋 已复制到剪贴板')).catch(()=>toast('复制失败','err'));
+}
+function clearCalc(){
+  document.getElementById('calcInput').value='';
+  document.getElementById('calcResults').innerHTML='<div class="calc-empty">📝 在上方输入尺寸，自动生成价格表</div>';
+  toast('🗑️ 已清空');
+}
+// ===== END [MODULE] Calculator View =====
+
+// ===== Render =====
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function renderSidebar(){const q=document.getElementById('sS').value,ps=bd.search(q),list=document.getElementById('sL');list.innerHTML=ps.length?ps.map(p=>`<div class="pli${bd.sel===p.id?' active':''}" onclick="sel(${p.id})"><span>${esc(p.n)}</span><span class="del" onclick="event.stopPropagation();cf('删除「${esc(p.n)}」？',()=>{bd.rem(${p.id});renderSidebar();renderDetail();})">✕</span></div>`).join(''):`<div class="sidebar-empty">${q?'无匹配':'暂无'}</div>`;}
+function sel(id){bd.sel=id;renderSidebar();renderDetail();if(!document.getElementById('appView').classList.contains('show'))goApp();}
+function onSearch(){renderSidebar();}
+function renderDetail(){const p=bd.sel?bd.get(bd.sel):null;const el=document.getElementById('detail');if(!p){el.innerHTML='<div style="color:#868e96;padding:40px;text-align:center;">选择左侧商品</div>';return;}sp=p;
+  el.innerHTML=`
+    <div class="prod-header"><span class="pn">${esc(p.n)}</span></div>
+    <div class="color-section"><div class="cs-title">🎨 可选颜色</div>
+      <div class="color-tags">${p.cs.map(c=>`<span class="color-tag">${esc(c)}<span class="ct-del" onclick="remC('${esc(c)}')">✕</span></span>`).join('')}<span class="color-tag add-color-tag" onclick="addC()">+</span></div>
+    </div>
+    <div class="sizes-section" id="szSec">${p.szs.length?p.szs.map((s,i)=>{const a=s.getArea(),bp=p.bp(i);return`<div class="size-card">
+      <div class="sc-row1"><span class="sc-num">#${i+1}</span><span class="sc-name">${esc(fmtDim(s.dim))}</span>${PF.map(pl=>{const v=p.pp(a,pl);const nl=PL_DESC[pl].name;return`<span class="sc-pp"><span class="ppl">${nl}</span>${pl==='pdd'?`<span class="ppi pdd-g">团${v.group.toFixed(1)}</span>/<span class="ppi pdd-s">单${v.single.toFixed(1)}</span>`:`<span class="ppi">¥${v.toFixed(1)}</span>`}</span>`;}).join('')}<span class="sc-del" onclick="event.stopPropagation();cf('删除尺寸#${i+1}？',()=>{sp.remSz(${i});bd.save();renderSidebar();renderDetail();})">🗑️</span></div>
+      <div class="sc-row2"><span class="sc-area">${a!==null?a.toFixed(0)+'cm²':'—'}</span><span class="sc-base">基础¥${bp.toFixed(1)}</span></div>
+    </div>`;}).join(''):'<div class="sizes-empty">暂无尺寸</div>'}
+      <div class="add-size-btn" onclick="openAV()">+ 添加尺寸</div>
+    </div>
+    <div class="pp-panel" id="ppPanel">
+      <div class="pp-title">📊 平台定价</div>
+      ${PF.map(pl=>{
+        const r=p.pr[pl]||{mode:'preset',custom:''};
+        const d=PL_DESC[pl];
+        return `<div class="pp-row"><span class="pp-name">${d.name}</span><span class="pp-desc">满${d.desc}</span><span class="pp-example" id="ppEx${pl}">—</span><span class="pp-toggle${r.mode==='custom'?' on':''}" id="ppTg${pl}" onclick="tgPP('${pl}')">📝公式</span><input class="pp-custom-input${r.mode==='custom'?' show':''}" id="ppCi${pl}" value="${esc(r.custom)}" placeholder="例: bp+2" onchange="ciPP('${pl}')" spellcheck="false"></div>`;
+      }).join('')}
+      <div class="pp-hint">📝 自定义用 <code>bp</code> 表示基础售价，例：<code>bp+2</code> 加价2元，<code>bp*1.2</code> 加价20%</div>
+    </div>`;
+  updatePPExample();
+}
+function updatePPExample(){
+  if(!sp)return;
+  PF.forEach(pl=>{
+    const el=document.getElementById('ppEx'+pl);
+    if(!el)return;
+    if(sp.szs.length){
+      const a=sp.szs[0].getArea();
+      const v=sp.pp(a,pl);
+      el.textContent=sp.ppStr(a,pl);
+    }else el.textContent='—';
+  });
+}
+function tgPP(pl){
+  if(!sp)return;
+  const r=sp.pr[pl];
+  r.mode=r.mode==='custom'?'preset':'custom';
+  bd.save();
+  renderDetail();
+}
+function ciPP(pl){
+  if(!sp)return;
+  const r=sp.pr[pl];
+  r.custom=document.getElementById('ppCi'+pl).value;
+  bd.save();
+  renderDetail();
+}
+function remC(c){if(!sp||sp.cs.length<=1)return;sp.remC(c);bd.save();renderDetail();renderSidebar();}
+function addC(){if(!sp)return;const n=prompt('颜色名：');if(n&&n.trim()){sp.addC(n.trim());bd.save();renderDetail();renderSidebar();}}
+
+// ===== Add Product Modal =====
+function openAM(){document.getElementById('amN').value='';document.getElementById('amSZ').value='';amSel=new Set(DC.map(c=>c.n));document.getElementById('amCG').innerHTML=DC.map(c=>`<div class="color-card${amSel.has(c.n)?' active':''}" onclick="tAM('${esc(c.n)}')"><img class="cc-img" src="${c.img}"><span class="cc-name">${esc(c.n)}</span><span class="cc-check">✓</span></div>`).join('');document.getElementById('amM').classList.add('active');setTimeout(()=>document.getElementById('amN').focus(),100);}
+function tAM(n){if(amSel.has(n)){if(amSel.size<=1)return;amSel.delete(n);}else amSel.add(n);document.querySelectorAll('#amCG .color-card').forEach(el=>{const name=el.querySelector('.cc-name').textContent;el.classList.toggle('active',amSel.has(name));});}
+function confirmAM(){const n=document.getElementById('amN').value.trim();if(!n){toast('请输入商品名','err');return;}const cs=[...amSel],items=parseSizes(document.getElementById('amSZ').value);const p=bd.add({n,cs,szs:items.map(it=>({dim:it.raw,area:it.area}))});bd.sel=p.id;closeAM();renderSidebar();renderDetail();goApp();toast(`✅ 已添加「${n}」`);}
+function closeAM(){document.getElementById('amM').classList.remove('active');}
+
+// ===== Add Size Modal =====
+function openAV(){if(!sp)return;document.getElementById('avSZ').value='';document.getElementById('avPL').innerHTML='';document.getElementById('avPE').style.display='block';document.getElementById('avM').classList.add('active');setTimeout(()=>document.getElementById('avSZ').focus(),100);}
+function previewAV(){if(!sp)return;const raw=document.getElementById('avSZ').value,items=parseSizes(raw),list=document.getElementById('avPL'),emp=document.getElementById('avPE');items.length?(emp.style.display='none',list.innerHTML=items.map(it=>{const pr=calcP(it.area,sp.up,sp.bf);return`<div class="sp-item"><span class="spi-name">长度${it.w}cm×宽度${it.h}cm</span><span class="spi-area">(${it.area.toFixed(0)}cm²)</span><span class="spi-price">¥${pr.toFixed(1)}</span></div>`;}).join('')):(emp.style.display='block',list.innerHTML='');}
+function confirmAV(){if(!sp)return;const items=parseSizes(document.getElementById('avSZ').value);if(!items.length){toast('请输入尺寸','err');return;}let ad=0;items.forEach(it=>{if(!sp.szs.find(s=>s.dim===it.raw)){sp.addSz(it.raw);ad++;}});bd.save();closeAV();renderDetail();renderSidebar();toast(`✅ 已添加 ${ad} 个尺寸`);}
+function closeAV(){document.getElementById('avM').classList.remove('active');}
+
+// ===== Wallpaper =====
+let wpList=[];
+class WP{
+  constructor(){this.l=document.getElementById('wallpaper-layer');this._d();}
+  async _d(){wpList=[];for(let i=1;i<=50;i++){let f=false;for(const e of['png','jpg','jpeg','webp','gif']){const u=`wallpapers/${i}.${e}`;if(await this._e(u)){wpList.push({url:u,name:`${i}.${e}`});f=true;break;}}if(!f)break;}const idx=parseInt(localStorage.getItem('pt7_wp'));if(!isNaN(idx)&&idx>=0&&idx<wpList.length)this.set(idx);else if(wpList.length)this.set(0);}
+  _e(u){return new Promise(r=>{const img=new Image();img.onload=()=>r(true);img.onerror=()=>r(false);img.src=u;});}
+  set(idx){if(idx<0||idx>=wpList.length)return;this.ci=idx;this.l.style.backgroundImage=`url('${wpList[idx].url}')`;localStorage.setItem('pt7_wp',String(idx));}
+}
+let wpMgr=new WP();
+
+function openWP(){renderWP();document.getElementById('wpM').classList.add('active');}
+function closeWP(){document.getElementById('wpM').classList.remove('active');}
+function renderWP(){
+  const grid=document.getElementById('wpGrid');
+  if(!wpList.length){grid.innerHTML='<div class="wp-empty">暂无壁纸~ 放入 wallpapers/ 文件夹</div>';return;}
+  grid.innerHTML=wpList.map((w,i)=>`<div class="wp-thumb${wpMgr.ci===i?' active':''}" style="background-image:url('${w.url}')" onclick="wpMgr.set(${i});renderWP();"><div class="wp-name">${esc(w.name)}</div></div>`).join('');
+}
+function uploadWP(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=(e)=>{const url=e.target.result;wpList.push({url,name:f.name});wpMgr.set(wpList.length-1);renderWP();toast('📤 壁纸已切换');};r.readAsDataURL(f);e.target.value='';}
+
+// ===== Export/Import =====
+function expJSON(){const b=new Blob([bd.expJSON()],{type:'application/json'});dl(b,`定价表_${new Date().toISOString().slice(0,10)}.json`);toast('📦 已导出');}
+function dl(b,n){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;a.click();}
+
+// ===== Storage (File System Access API) =====
+let dirHandle=null;
+function idb(){return new Promise((rs,rj)=>{const r=indexedDB.open('PT_Store',1);r.onupgradeneeded=e=>e.target.result.createObjectStore('h');r.onsuccess=e=>rs(e.target.result);r.onerror=e=>rj(e.target.error);});}
+function idbPut(k,v){return idb().then(db=>new Promise((rs,rj)=>{const tx=db.transaction('h','readwrite');tx.objectStore('h').put(v,k);tx.oncomplete=()=>rs();tx.onerror=e=>rj(e.target.error);}));}
+function idbGet(k){return idb().then(db=>new Promise((rs,rj)=>{const tx=db.transaction('h','readonly');const r=tx.objectStore('h').get(k);r.onsuccess=()=>rs(r.result);r.onerror=e=>rj(e.target.error);}));}
+function openST(){updateSTStatus();document.getElementById('stM').classList.add('active');}
+function closeST(){document.getElementById('stM').classList.remove('active');}
+function updateSTStatus(){
+  const el=document.getElementById('stStatus'),msg=document.getElementById('stMsg'),p=document.getElementById('stPath');
+  if(dirHandle){
+    el.className='st-status on';msg.textContent='✅ 已绑定数据目录，自动同步中';
+    p.textContent='📂 '+(dirHandle.name||'DATA');
+  }else{
+    el.className='st-status off';msg.textContent='⚠️ 未绑定数据文件';
+    p.textContent='提示：点「绑定DATA目录」设置自动存储';
+  }
+}
+async function bindStorage(){
+  try{
+    dirHandle=await window.showDirectoryPicker({mode:'readwrite',id:'pt_data'});
+    await idbPut('dirHandle',dirHandle);
+    updateSTStatus();
+    toast('📁 已绑定DATA目录');
+    await loadFromDir();
+  }catch(e){if(e.name!=='AbortError')toast('绑定失败','err');}
+}
+async function saveToFile(){
+  if(!dirHandle){toast('请先绑定DATA目录','warn');return;}
+  try{
+    const fh=await dirHandle.getFileHandle('data.json',{create:true});
+    const w=await fh.createWritable();await w.write(bd.expJSON());await w.close();
+    toast('💾 已保存到 data.json');
+  }catch(e){toast('保存失败','err');}
+}
+async function loadFromDir(){
+  if(!dirHandle)return;
+  try{
+    const fh=await dirHandle.getFileHandle('data.json');
+    const txt=await(await fh.getFile()).text();
+    const res=bd.impJSON(txt);
+    if(res.ok){renderSidebar();renderDetail();toast('📂 已从文件恢复');}
+  }catch(e){/* file not exists yet, thats OK */}
+}
+function loadFromFile(){
+  const inp=document.createElement('input');inp.type='file';inp.accept='.json';
+  inp.onchange=e=>{
+    const f=e.target.files[0];if(!f)return;
+    const r=new FileReader();r.onload=e=>{const res=bd.impJSON(e.target.result);renderSidebar();renderDetail();toast(res.msg,res.ok?'':'warn');};r.readAsText(f);
+  };inp.click();
+}
+async function restoreFileHandle(){
+  try{
+    const h=await idbGet('dirHandle');
+    if(h){dirHandle=h;updateSTStatus();await loadFromDir();}
+  }catch(e){}
+}
+
+// ===== Utils =====
+function cf(msg,cb){document.getElementById('cfM').textContent=msg;cfCb=cb;document.getElementById('cfO').classList.add('active');}
+function closeCF(){document.getElementById('cfO').classList.remove('active');cfCb=null;}
+document.getElementById('cfY').addEventListener('click',()=>{if(cfCb)cfCb();closeCF();});
+document.getElementById('cfO').addEventListener('click',(e)=>{if(e.target===e.currentTarget)closeCF();});
+function toast(msg,type){const t=document.createElement('div');t.className='toast'+(type==='err'?' err':type==='warn'?' warn':'');t.textContent=msg;document.body.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity 0.3s';setTimeout(()=>t.remove(),300);},2000);}
+document.addEventListener('keydown',(e)=>{
+  if(e.key==='Escape'){
+    document.querySelectorAll('.modal-overlay.active').forEach(el=>el.classList.remove('active'));
+    closeST();
+    closeCF();
+    if(document.getElementById('searchView').classList.contains('show'))closeSearch();
+    if(document.getElementById('calcView').classList.contains('show'))closeCalc();
+  }
+  if(e.key==='Enter'&&document.getElementById('cfO').classList.contains('active')){
+    e.preventDefault();
+    if(cfCb)cfCb();
+    closeCF();
+  }
+});
+renderSidebar();
+restoreView();
+restoreFileHandle();
+</script>
+</body>
+</html>

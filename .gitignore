@@ -1,0 +1,6 @@
+# Personal data
+DATA/data.json
+
+# OS files
+Thumbs.db
+.DS_Store
