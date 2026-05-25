@@ -1,35 +1,26 @@
-# 🏷️ 商品定价表 - Product Pricing Table
+# Pricing Board
 
-一个纯前端、零依赖的多平台商品SKU定价管理工具。
+A zero-dependency multi-platform pricing management tool for e-commerce sellers.
 
-## 功能
+## Core Features
 
-- **📋 商品管理** — 添加、编辑、删除商品，支持多颜色/尺寸
-- **🏪 多平台定价** — 淘宝/抖音/拼多多/京东独立溢价规则
-- **📐 尺寸价格计算器** — 批量输入尺寸，自动计算各平台售价
-- **🔍 商品搜索** — 快速查找并跳转商品详情
-- **🖼️ 壁纸系统** — 自定义背景壁纸
-- **💾 自动存储** — 支持绑定目录自动保存JSON
+- **Multi-platform SKU management** with custom attributes
+- **Platform algorithm engine** - Taobao / Douyin / PDD / JD
+- **Custom formulas** using math expressions, extendable pricing strategies
+- **One-click comparison** across platforms
+- **Auto-sync to local JSON** via directory binding
+- **AI Agent ready** for local integration
 
-## 使用
+## Tech Stack
 
-直接打开 `index.html` 即可使用（推荐 Edge/Chrome 浏览器）。
+- Pure HTML/CSS/JavaScript, zero dependency
+- Excalidraw hand-drawn UI + glassmorphism + handwrite fonts
+- localStorage + File System Access API
 
-### 存储
-点击首页「💾 存储」按钮 → 选择项目下的 `DATA` 文件夹 → 之后每次修改自动同步到 `data.json`。
+## Quick Start
 
-## 技术栈
+Open index.html in Edge/Chrome. Click storage button to bind DATA directory.
 
-- 纯 HTML/CSS/JavaScript，零依赖
-- 手绘风 UI（Excalidraw 样式）
-- localStorage + File System Access API 双存储
+## Open Source
 
-## 平台定价规则
-
-| 平台 | 规则 |
-|:----|:-----|
-| 淘宝 | 满额溢价：10→2 / 20→4 / 40→8 / 60→15 |
-| 抖音 | 固定溢价 +2 |
-| 拼多多 | 满10溢价1 → 拼团/0.8 → 单买+8 |
-| 京东 | 固定溢价 +2 |
-| 自定义 | 支持数学公式（用 `bp` 表示基础售价） |
+https://github.com/1422356018/sketch-pricing
